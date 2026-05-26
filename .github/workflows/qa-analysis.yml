@@ -53,4 +53,16 @@ jobs:
       - name: Workflow Status
         run: |
           echo "✅ QA Analysis workflow triggered successfully"
-          echo "⏳ Ready for AI analysis script (coming in Sub-Phase 2B)"
+          echo "⏳ Running AI analysis..."
+
+      # Step 5 — Run AI Analysis
+      - name: Run AI Analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: node .github/scripts/analyze-failure.js
