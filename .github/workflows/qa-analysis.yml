@@ -1,7 +1,71 @@
-# ── QA Failure Analysis Workflow ─────────────────────────────────────────────
-# Triggered when a new issue with the "qa-failure" label is opened.
-# This is Sub-Phase 2A — trigger setup only.
-# AI analysis script will be added in Sub-Phase 2B.
+# # ── QA Failure Analysis Workflow ─────────────────────────────────────────────
+# # Triggered when a new issue with the "qa-failure" label is opened.
+# # This is Sub-Phase 2A — trigger setup only.
+# # AI analysis script will be added in Sub-Phase 2B.
+
+# name: QA Failure Analysis
+
+# on:
+#   issues:
+#     types: [opened, labeled]
+
+# jobs:
+#   analyze-failure:
+#     name: Analyze QA Failure
+#     runs-on: ubuntu-latest
+
+#     # ── Only run if the issue has the "qa-failure" label
+#     if: contains(github.event.issue.labels.*.name, 'qa-failure')
+
+#     steps:
+#       # Step 1 — Checkout the repository code
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
+
+#       # Step 2 — Setup Node.js
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '24'
+
+#       # Step 3 — Print issue details for verification
+#       - name: Print Issue Details
+#         env:
+#           ISSUE_NUMBER: ${{ github.event.issue.number }}
+#           ISSUE_TITLE: ${{ github.event.issue.title }}
+#           ISSUE_BODY: ${{ github.event.issue.body }}
+#           REPO_OWNER: ${{ github.repository_owner }}
+#           REPO_NAME: ${{ github.event.repository.name }}
+#         run: |
+#           echo "════════════════════════════════════"
+#           echo "QA FAILURE ISSUE DETECTED"
+#           echo "════════════════════════════════════"
+#           echo "Issue Number : #$ISSUE_NUMBER"
+#           echo "Issue Title  : $ISSUE_TITLE"
+#           echo "Repo Owner   : $REPO_OWNER"
+#           echo "Repo Name    : $REPO_NAME"
+#           echo "════════════════════════════════════"
+#           echo "Issue Body:"
+#           echo "$ISSUE_BODY"
+#           echo "════════════════════════════════════"
+
+#       # Step 4 — Confirm workflow triggered
+#       - name: Workflow Status
+#         run: |
+#           echo "✅ QA Analysis workflow triggered successfully"
+#           echo "⏳ Running AI analysis..."
+
+#       # Step 5 — Run AI Analysis
+#       - name: Run AI Analysis
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#           ISSUE_NUMBER: ${{ github.event.issue.number }}
+#           ISSUE_TITLE: ${{ github.event.issue.title }}
+#           ISSUE_BODY: ${{ github.event.issue.body }}
+#           REPO_OWNER: ${{ github.repository_owner }}
+#           REPO_NAME: ${{ github.event.repository.name }}
+#         run: node .github/scripts/analyze-failure.js
 
 name: QA Failure Analysis
 
@@ -13,22 +77,20 @@ jobs:
   analyze-failure:
     name: Analyze QA Failure
     runs-on: ubuntu-latest
-
-    # ── Only run if the issue has the "qa-failure" label
+    permissions:
+      issues: write
+      contents: read
     if: contains(github.event.issue.labels.*.name, 'qa-failure')
 
     steps:
-      # Step 1 — Checkout the repository code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2 — Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      # Step 3 — Print issue details for verification
       - name: Print Issue Details
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -49,13 +111,11 @@ jobs:
           echo "$ISSUE_BODY"
           echo "════════════════════════════════════"
 
-      # Step 4 — Confirm workflow triggered
       - name: Workflow Status
         run: |
           echo "✅ QA Analysis workflow triggered successfully"
           echo "⏳ Running AI analysis..."
 
-      # Step 5 — Run AI Analysis
       - name: Run AI Analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
