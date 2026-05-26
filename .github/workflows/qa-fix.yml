@@ -1,0 +1,81 @@
+# ── QA Auto-Fix Workflow ─────────────────────────────────────────────────────
+# Triggered when a user comments "/fix implement" on a qa-failure issue.
+# Automatically generates and applies a fix using Google Gemini API.
+# Creates a pull request with the surgical patch.
+# This is Sub-Phase 3A — Auto-Fix Pipeline.
+
+name: QA Auto-Fix
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  apply-fix:
+    name: Apply AI-Generated Fix
+    runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: write
+
+    # ── Only run if:
+    # 1. Comment body is exactly "/fix implement"
+    # 2. Issue has the "qa-failure" label
+    if: |
+      github.event.issue.pull_request == null &&
+      github.event.comment.body == '/fix implement' &&
+      contains(github.event.issue.labels.*.name, 'qa-failure')
+
+    steps:
+      # ── Step 1: Validate the trigger condition
+      - name: Validate Trigger
+        run: |
+          echo "════════════════════════════════════"
+          echo "QA AUTO-FIX WORKFLOW TRIGGERED"
+          echo "════════════════════════════════════"
+          echo "Trigger: /fix implement comment"
+          echo "Issue #: ${{ github.event.issue.number }}"
+          echo "Commenter: @${{ github.event.comment.user.login }}"
+          echo "════════════════════════════════════"
+
+      # ── Step 2: Checkout repository with full git history
+      # fetch-depth: 0 needed for git operations (branch creation, pushing)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Step 3: Setup Node.js 24 runtime
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # ── Step 4: Configure git identity for commits
+      # Required before any git commit operations
+      - name: Configure Git Identity
+        run: |
+          git config user.name "QA Intelligence Bot"
+          git config user.email "qa-bot@github-actions"
+          git config --list | grep user
+
+      # ── Step 5: Run the AI-powered fix script
+      # This script will:
+      # - Fetch the AI analysis comment
+      # - Generate a unified diff patch using Gemini
+      # - Apply the patch to the source file
+      # - Create a new branch and commit
+      # - Push the branch and create a pull request
+      # - Post confirmation comment on the issue
+      - name: Run AI-Powered Fix Script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+        run: node .github/scripts/apply-fix.js
