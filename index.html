@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QACheck — Simple Booking System</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #2b6cb0, #553c9a);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; letter-spacing: 1px; }
+    header p  { margin-top: 0.4rem; opacity: 0.85; font-size: 0.95rem; }
+
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.75rem;
+    }
+    .card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 1.2rem;
+      color: #2b6cb0;
+      border-bottom: 2px solid #ebf8ff;
+      padding-bottom: 0.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: 0.82rem; color: #4a5568; margin-bottom: 0.3rem; font-weight: 600; }
+
+    input, select {
+      width: 100%;
+      padding: 0.55rem 0.85rem;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+      background: #f7fafc;
+    }
+    input:focus, select:focus { outline: none; border-color: #2b6cb0; background: white; }
+
+    button {
+      margin-top: 1.2rem;
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #2b6cb0, #553c9a);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.88; }
+
+    .result-box {
+      margin-top: 1.1rem;
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.93rem;
+      line-height: 1.7;
+      display: none;
+    }
+    .result-box.show { display: block; }
+    .result-box.ok   { background: #f0fff4; border: 1.5px solid #68d391; color: #22543d; }
+    .result-box.err  { background: #fff5f5; border: 1.5px solid #fc8181; color: #742a2a; }
+    .result-box.warn { background: #fffaf0; border: 1.5px solid #f6ad55; color: #7b341e; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 700;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    .badge.bug  { background: #fed7d7; color: #9b2c2c; }
+    .badge.ok   { background: #c6f6d5; color: #276749; }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.8rem;
+      color: #718096;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏨 Simple Booking System</h1>
+  <p>QA Testing Demo — intentional bugs included</p>
+</header>
+
+<main>
+
+  <!-- ── AVAILABILITY CHECK ── -->
+  <div class="card">
+    <h2>🗓 Room Availability Checker</h2>
+    <div class="form-grid">
+      <div>
+        <label>Check-In Date</label>
+        <input type="date" id="checkIn" />
+      </div>
+      <div>
+        <label>Check-Out Date</label>
+        <input type="date" id="checkOut" />
+      </div>
+      <div>
+        <label>Available Rooms</label>
+        <input type="number" id="rooms" value="5" min="0" />
+      </div>
+    </div>
+    <button onclick="runAvailability()">Check Availability</button>
+    <div class="result-box" id="availResult"></div>
+  </div>
+
+  <!-- ── PRICE CALCULATOR ── -->
+  <div class="card">
+    <h2>💰 Booking Price Calculator</h2>
+    <div class="form-grid">
+      <div>
+        <label>Base Price per Night ($)</label>
+        <input type="number" id="basePrice" value="100" min="0" />
+      </div>
+      <div>
+        <label>Tax (%)</label>
+        <input type="number" id="taxPercent" value="10" min="0" />
+      </div>
+      <div>
+        <label>Discount Code</label>
+        <input type="text" id="discountCode" placeholder="e.g. SAVE20" />
+      </div>
+    </div>
+    <button onclick="runPricing()">Calculate Price</button>
+    <div class="result-box" id="priceResult"></div>
+  </div>
+
+  <!-- ── PAYMENT ── -->
+  <div class="card">
+    <h2>💳 Payment & Refund</h2>
+    <div class="form-grid">
+      <div>
+        <label>Payment Amount ($)</label>
+        <input type="number" id="payAmount" value="0" min="0" />
+      </div>
+      <div>
+        <label>Refund Percentage (%)</label>
+        <input type="number" id="refundPercent" value="20" min="0" max="100" />
+      </div>
+    </div>
+    <button onclick="runPayment()">Process Payment &amp; Refund</button>
+    <div class="result-box" id="payResult"></div>
+  </div>
+
+</main>
+
+<footer>QACheck · Simple Booking System · QA Demo Project</footer>
+
+<script>
+  // ── booking.js logic ──────────────────────────────────────────────────────
+
+  function calculateTotalPrice(basePrice, nights, taxPercent) {
+    const subtotal = basePrice * nights;
+    // BUG: Missing /100 in tax calculation
+    const tax = subtotal * taxPercent;
+    return subtotal + tax;
+  }
+
+  function applyDiscount(price, discountCode) {
+    let discount = 0;
+    if (discountCode === "SAVE20") {
+      // BUG: Divides by 10 instead of 100
+      discount = price * (20 / 10);
+    }
+    return price - discount;
+  }
+
+  // ── availability.js logic ─────────────────────────────────────────────────
+
+  function checkRoomAvailability(rooms, checkIn, checkOut) {
+    // BUG: Allows same-day booking (should be >= not >)
+    if (checkIn > checkOut) return false;
+    return rooms > 0;
+  }
+
+  function calculateNights(checkIn, checkOut) {
+    // BUG: Can return 0 or negative
+    return (checkOut - checkIn) / (1000 * 60 * 60 * 24);
+  }
+
+  // ── payment.js logic ──────────────────────────────────────────────────────
+
+  function processRefund(amount, refundPercent) {
+    // BUG: Missing /100 — refund is multiplied, not percentaged
+    return amount * refundPercent;
+  }
+
+  function validatePayment(amount) {
+    // BUG: Allows zero amount
+    if (amount < 0) return false;
+    return true;
+  }
+
+  // ── UI handlers ───────────────────────────────────────────────────────────
+
+  function show(id, type, html) {
+    const el = document.getElementById(id);
+    el.className = `result-box show ${type}`;
+    el.innerHTML = html;
+  }
+
+  function bugBadge()   { return '<span class="badge bug">🐛 BUG</span>'; }
+  function cleanBadge() { return '<span class="badge ok">✅ OK</span>'; }
+
+  function runAvailability() {
+    const ci    = document.getElementById('checkIn').value;
+    const co    = document.getElementById('checkOut').value;
+    const rooms = parseInt(document.getElementById('rooms').value);
+
+    if (!ci || !co) { show('availResult', 'warn', '⚠️ Please select both dates.'); return; }
+
+    const ciDate = new Date(ci);
+    const coDate = new Date(co);
+    const nights = calculateNights(ciDate, coDate);
+    const avail  = checkRoomAvailability(rooms, ciDate, coDate);
+
+    let type = avail ? 'ok' : 'err';
+    let html = `<strong>Available:</strong> ${avail ? 'Yes' : 'No'}<br>
+                <strong>Nights:</strong> ${nights}`;
+
+    if (ci === co) {
+      html += `<br><strong>Same-day booking:</strong> Allowed ${bugBadge()} (should be rejected)`;
+      type = 'warn';
+    }
+    if (nights <= 0) {
+      html += `<br><strong>Nights calc:</strong> ${nights} ${bugBadge()} (zero/negative nights allowed)`;
+    }
+
+    show('availResult', type, html);
+  }
+
+  function runPricing() {
+    const ci   = document.getElementById('checkIn').value;
+    const co   = document.getElementById('checkOut').value;
+    const base = parseFloat(document.getElementById('basePrice').value);
+    const tax  = parseFloat(document.getElementById('taxPercent').value);
+    const code = document.getElementById('discountCode').value.trim().toUpperCase();
+
+    if (!ci || !co) { show('priceResult', 'warn', '⚠️ Set check-in/out dates first.'); return; }
+
+    const nights   = calculateNights(new Date(ci), new Date(co)) || 1;
+    const total    = calculateTotalPrice(base, nights, tax);
+    const correct  = (base * nights) * (1 + tax / 100);
+    const discounted = applyDiscount(total, code);
+    const correctDiscount = code === 'SAVE20' ? total * (1 - 0.20) : total;
+
+    let html = `<strong>Nights:</strong> ${nights}<br>
+                <strong>Subtotal:</strong> $${(base * nights).toFixed(2)}<br>
+                <strong>Calculated Total (with tax):</strong> $${total.toFixed(2)} ${bugBadge()}
+                &nbsp;<em>(correct: $${correct.toFixed(2)})</em><br>`;
+
+    if (code === 'SAVE20') {
+      html += `<strong>After SAVE20 discount:</strong> $${discounted.toFixed(2)} ${bugBadge()}
+               &nbsp;<em>(correct: $${correctDiscount.toFixed(2)})</em>`;
+    }
+
+    show('priceResult', 'warn', html);
+  }
+
+  function runPayment() {
+    const amount  = parseFloat(document.getElementById('payAmount').value);
+    const pct     = parseFloat(document.getElementById('refundPercent').value);
+
+    const valid   = validatePayment(amount);
+    const refund  = processRefund(amount, pct);
+    const correctRefund = amount * (pct / 100);
+
+    let html = `<strong>Amount:</strong> $${amount}<br>
+                <strong>Payment Valid:</strong> ${valid}`;
+
+    if (amount === 0) {
+      html += ` ${bugBadge()} <em>(zero should be invalid)</em>`;
+    } else {
+      html += ` ${cleanBadge()}`;
+    }
+
+    html += `<br><strong>Refund Calculated:</strong> $${refund.toFixed(2)} ${bugBadge()}
+             &nbsp;<em>(correct: $${correctRefund.toFixed(2)})</em>`;
+
+    show('payResult', amount === 0 || refund !== correctRefund ? 'warn' : 'ok', html);
+  }
+
+  // Pre-fill today + tomorrow for convenience
+  window.addEventListener('DOMContentLoaded', () => {
+    const today    = new Date();
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const fmt = d => d.toISOString().split('T')[0];
+    document.getElementById('checkIn').value  = fmt(today);
+    document.getElementById('checkOut').value = fmt(tomorrow);
+  });
+</script>
+
+</body>
+</html>
